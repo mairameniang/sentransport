@@ -1,15 +1,17 @@
-import './LigneBus.css';
-
-function LigneBus({ numero, depart, arrivee, arrets }) {
+function LigneBus({ numero, depart, arrivee, onClick, estSelectionnee }) {
   return (
-    <div className="ligne-bus">
-      <div className="ligne-numero">{numero}</div>
-      <div className="ligne-info">
-        <span className="ligne-trajet">
-          {depart} → {arrivee}
-        </span>
-        <span className="ligne-arrets">{arrets} arrets</span>
-      </div>
+    <div
+      onClick={onClick}
+      style={{
+        padding: "10px",
+        margin: "10px",
+        border: "1px solid black",
+        cursor: "pointer",
+        background: estSelectionnee ? "#d1f0ff" : "white"
+      }}
+    >
+      <h3>Ligne {numero}</h3>
+      <p>{depart} → {arrivee}</p>
     </div>
   );
 }
