@@ -13,7 +13,41 @@ with open("arrets.json", "r") as f:
     arrets = json.load(f)
 
 
-# Route d'accueil
+# =========================
+# INCIDENTS
+# =========================
+incidents = []
+
+@app.route("/incidents", methods=["GET"])
+def get_incidents():
+    return jsonify(incidents)
+
+
+@app.route("/incidents", methods=["POST"])
+def post_incident():
+    data = request.get_json()
+
+    if not data or "ligne" not in data or "description" not in data:
+        return jsonify(
+            {"erreur": "Champs requis manquants"}
+        ), 400
+
+    incident = {
+        "id": len(incidents) + 1,
+        "ligne": data["ligne"],
+        "description": data["description"],
+        "lieu": data.get("lieu", "Non precise"),
+    }
+
+    incidents.append(incident)
+
+    return jsonify(incident), 201
+
+
+# =========================
+# ROUTES API
+# =========================
+
 @app.route("/")
 def accueil():
     return jsonify({
@@ -23,44 +57,37 @@ def accueil():
             "/lignes/<id>",
             "/arrets",
             "/stats",
-            "/lignes/recherche?q=..."
+            "/lignes/recherche?q=...",
+            "/incidents"
         ]
     })
 
 
-# Route : toutes les lignes
 @app.route("/lignes")
 def get_lignes():
     return jsonify(lignes)
 
 
-# Route : une ligne par ID
 @app.route("/lignes/<int:ligne_id>")
 def get_ligne(ligne_id):
-
     ligne = next(
         (l for l in lignes if l["id"] == ligne_id),
         None
     )
 
     if ligne is None:
-        return jsonify({
-            "erreur": "Ligne non trouvée"
-        }), 404
+        return jsonify({"erreur": "Ligne non trouvée"}), 404
 
     return jsonify(ligne)
 
 
-# Route : tous les arrêts
 @app.route("/arrets", methods=["GET"])
 def get_arrets():
     return jsonify(arrets)
 
 
-# Route : statistiques
 @app.route("/stats", methods=["GET"])
 def get_stats():
-
     nb_lignes = len(lignes)
 
     nb_total_arrets = sum(
@@ -72,38 +99,31 @@ def get_stats():
         key=lambda l: len(l["listeArrets"])
     )["numero"]
 
-    stats = {
+    return jsonify({
         "nombre_lignes": nb_lignes,
         "nombre_total_arrets": nb_total_arrets,
         "ligne_plus_arrets": ligne_plus_arrets
-    }
-
-    return jsonify(stats)
+    })
 
 
-# Route : recherche
 @app.route("/lignes/recherche", methods=["GET"])
 def recherche_lignes():
-
-    # Récupérer le paramètre q
     q = request.args.get("q", "").lower()
 
-    # Liste des résultats
     resultats = []
 
-    # Parcourir les lignes
     for ligne in lignes:
-
         depart = ligne["depart"].lower()
         arrivee = ligne["arrivee"].lower()
 
-        # Vérifier si q est dans départ ou arrivée
         if q in depart or q in arrivee:
             resultats.append(ligne)
 
     return jsonify(resultats)
 
 
-# Lancer Flask
+# =========================
+# LANCEMENT
+# =========================
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
